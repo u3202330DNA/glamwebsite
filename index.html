@@ -1,0 +1,238 @@
+<html>
+
+<head>
+    <title>Dark Sky Intro</title>
+
+    <link href="assets/css/reset.css" rel=“stylesheet”>
+
+    <link href="assets/css/styles.css" rel=“stylesheet”>
+
+</head>
+
+<header>
+    <h1>GLAM Weather </h1>
+
+</header>
+
+<body>
+    <!-- all code would go here-->
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            var newlocation = '';
+
+            if (navigator.geolocation) {
+
+                console.log(navigator.geolocation);
+
+                function success(pos) {
+
+                    console.log(pos);
+
+                    var crds = pos.coords;
+
+                    console.log('my current position is: ');
+                    console.log('lat:' + crds.latitude);
+                    console.log('long:' + crds.longitude);
+                    console.log('more or less:' + crds.accuracy + 'm away.');
+
+                    //string for api (darksky)
+                    newLocation = crds.latitude + ',' + crds.longitude;
+
+
+                    //string to acquire location (opencage)
+                    var locationName = crds.latitude + '+' + crds.longitude;
+
+
+                    //dara from darksky weather
+                    getWeatherData(newLocation)
+
+                    //location name
+                    getLocationName(locationName);
+
+
+
+
+                }
+
+                function error(err) {
+                    console.log(err);
+
+
+                    //ACT default location
+                    var defaultLocation = '-35.4735, 149.0124';
+
+                    getWeatherData(defaultLocation);
+
+                }
+
+                //line that triggers browser prompt
+                navigator.geolocation.getCurrentPosition(success, error);
+
+
+
+
+            }
+
+
+        }); // Close document ready
+
+        //acquire location name
+
+        function getLocationName(location) {
+
+            var apiKey = 'b26d33df0de0440cb6bc852e63c3a595 ';
+
+            var geocodeUrl = 'https://api.opencagedata.com/geocode/v1/json?q=' + location + ' &key=' + apiKey;
+
+            $.get(geocodeUrl, function(locationData) {
+                console.log(locationData.results[0]);
+
+                var locationComponent = locationData.results[0].components;
+
+                var locString = locationComponent.suburb + ', ' + locationComponent.state_code + ', ' + locationComponent.postcode;
+
+                var location = $('<h3>').text("In: " + locString);
+
+                $("#currently").append(location);
+
+            });
+
+
+
+        };
+
+
+
+
+        //Function will load dark ski API
+        function getWeatherData(currentLocation) {
+
+
+            // my API key
+            var key = '3993c7f026ca3be6be9531eae0012693';
+
+            // API call 
+            var url = 'https://api.darksky.net/forecast/' + key + '/' + currentLocation + '?units=auto&callback=?';
+
+            $.getJSON(url, function(data) {
+                //output request
+                console.log(data);
+
+                //get current temperature
+                console.log(data.currently.temperature);
+                $("#currently").html(data.currently.temperature)
+
+
+                //New easy  way
+                //get summary
+                var summary = data.currently.summary;
+                $("#currently").html(summary);
+
+                //get time
+                //get current time
+                console.log(data.currently.time);
+                var now = new Date(data.currently.time * 1000);
+                console.log(now);
+                $("#currently").html(now.toDateString() + ',' + now.toTimeString())
+
+                $("#currently").append(summary);
+
+                //loopthrough data and add to the table 
+                //new row for each new time
+
+                for (var i = 0; i < data.daily.data.length; i++) {
+                    var f = data.daily.data[i]; //data for one day in the forecast
+
+                    console.log(f)
+
+
+                    var row = $("<tr>");
+                    var date = new Date(f.time * 1000);
+
+
+                    //table contents
+                    row.append("<td>" + date.toDateString() + "</td>");
+                    row.append("<td>" + f.summary + "</td>");
+
+                    //temperature range
+                    row.append("<td>" + Math.round(f.temperatureMin) + "</td>");
+                    row.append("<td>" + Math.round(f.temperatureMax) + "</td>");
+
+                    //humidity
+                    row.append("<td>" + f.humidity + "</td>");
+
+                    //uv index
+                    row.append("<td>" + f.uvIndex + "</td>")
+
+
+                    //append the tr info in the table 
+
+                    $("#forecast").append(row);
+                }
+
+            });
+        }
+
+    </script>
+
+    <div class="icons">
+    </div>
+
+    <div id="currently"> </div>
+    <div>
+
+        <table id="forecast">
+            <tr>
+                <th>Date</th>
+                <th>Summary</th>
+                <th>Min</th>
+                <th>Max</th>
+                <th>Humidity</th>
+                <th>UV Index</th>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <div class="content">
+
+
+
+    </div>
+
+    <!--    Aquire news paper information-->
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            // my TROVE API key
+            var key = 'tmdj372b53p8erta';
+
+            // API call 
+            var url = 'https://api.trove.nla.gov.au/v2/newspaper/title/35?encoding=json' + '&key=' + key;
+
+            $.getJSON(url, function(data) {
+                console.log(data);
+
+                console.log(data.newspaper.state)
+
+
+
+            });
+        })
+
+    </script>
+
+
+</body>
+
+</html>

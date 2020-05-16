@@ -1,0 +1,250 @@
+<html>
+
+<head>
+    <title>Time Machine </title>
+
+    <link href="../assets/css/reset.css" rel="stylesheet">
+
+    <link href="../assets/css/styles.css" rel="stylesheet">
+
+</head>
+<div class="wrapper">
+    <header>
+        <h1>TIME MACHINE </h1>
+    </header>
+</div>
+
+<div class="wrapper">
+    <div class="hero">
+        <!--    image to be set in css-->
+    </div>
+</div>
+<div class="wrapper">
+
+    <body>
+        <!-- all code would go here-->
+        <h2> A look into the past </h2>
+
+        <nav>
+            <ul>
+                <a href="../index.html"> Dive back through time </a>
+            </ul>
+
+        </nav>
+
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                var newlocation = '';
+
+                if (navigator.geolocation) {
+
+                    console.log(navigator.geolocation);
+
+                    function success(pos) {
+
+                        console.log(pos);
+
+                        var crds = pos.coords;
+
+                        //                    console.log('my current position is: ');
+                        //                    console.log('lat:' + crds.latitude);
+                        //                    console.log('long:' + crds.longitude);
+                        //                    console.log('more or less:' + crds.accuracy + 'm away.');
+
+                        //string for api (darksky)
+                        newLocation = crds.latitude + ',' + crds.longitude;
+
+
+                        //string to acquire location (opencage)
+                        var locationName = crds.latitude + '+' + crds.longitude;
+
+
+                        //dara from darksky weather
+                        getWeatherData(newLocation)
+
+                        //location name
+                        getLocationName(locationName);
+
+                    }
+
+                    function error(err) {
+                        console.log(err);
+
+
+                        //ACT default location
+                        var defaultLocation = '-35.4735, 149.0124';
+
+                        getWeatherData(defaultLocation);
+
+                    }
+
+                    //line that triggers browser prompt
+                    navigator.geolocation.getCurrentPosition(success, error);
+
+
+
+
+                }
+
+
+
+            }); // Close document ready
+
+            //acquire location name
+
+            function getLocationName(location) {
+
+                var apiKey = 'b26d33df0de0440cb6bc852e63c3a595 ';
+
+                var geocodeUrl = 'https://api.opencagedata.com/geocode/v1/json?q=' + location + ' &key=' + apiKey;
+
+                $.get(geocodeUrl, function(locationData) {
+                    console.log(locationData.results[0]);
+
+                    var locationComponent = locationData.results[0].components;
+
+                    var locString = locationComponent.suburb + ', ' + locationComponent.state_code + ', ' + locationComponent.postcode;
+
+                    //get the state (full text) so we can use it below
+                    var locState = locationComponent.state;
+
+                    var location = $('<h3>').text("In: " + locString);
+
+                    $("#currently").append(location);
+
+                    //BEN: Call the function which gets the trove data
+                    // you have to wait until you have the location data from the api
+                    // because you need to retrieve data based off the state
+                    getTroveData(locState);
+
+
+                });
+
+
+
+            };
+
+
+
+
+            //Function will load dark ski API
+            function getWeatherData(currentLocation) {
+
+
+                // my API key
+                var key = '3993c7f026ca3be6be9531eae0012693';
+
+                // API call 
+                var url = 'https://api.darksky.net/forecast/' + key + '/' + currentLocation + '?units=auto&callback=?';
+
+                $.getJSON(url, function(data) {
+                    //output request
+                    console.log(data);
+
+                    //get current temperature
+                    console.log(data.currently.temperature);
+                    $("#currently").html(data.currently.temperature)
+
+
+                    //get time
+                    //get current time
+
+                    console.log(data.currently.time);
+                    var now = new Date(data.currently.time * 1000);
+                    console.log(now);
+                    $("#currently").html(now.toDateString() + ',' + now.toTimeString())
+
+
+
+                    //loopthrough data and add to the table 
+                    //new row for each new time
+
+                    for (var i = 0; i < data.daily.data.length; i++) {
+                        var f = data.daily.data[i]; //data for one day in the forecast
+
+                        //                    console.log(f)
+
+
+                        var row = $("<tr>");
+                        var date = new Date(f.time * 1000);
+
+
+
+                        //append the tr info in the table 
+
+                        $("#forecast").append(row);
+                    }
+
+                });
+            }
+
+
+            //This needs to be in a function so you can call it from in your code
+            function getTroveData(state) {
+                console.log('in trove call');
+
+                // my TROVE API key
+                var key = 'tmdj372b53p8erta';
+
+                //Trove API search  
+                var url = 'https://api.trove.nla.gov.au/v2/result?key=' + key + '&zone=newspaper&q=history%20buildings&l-date=' + state;
+
+                $.getJSON(url, function(data) {
+                    console.log(data);
+
+                    //                console.log(data.newspaper.state)
+
+                    // now let's loop through results
+                    var results = data.response.zone[0].records.article;
+                    console.log(results);
+                    for (var x = 0; x < results.length; x++) {
+
+                        var item = results[x];
+
+                        console.log(item);
+
+
+                        var content = '<h4>' + item.heading + '</h4><h5>' + item.date + '</h5><h6>' + item.troveUrl + '</h6><p>' + item.snippet + '</p>';
+
+
+                        $('.content').append(content);
+
+
+
+                    }
+
+
+
+                    //                
+
+                });
+            }
+
+        </script>
+
+
+
+        <div id="currently"> </div>
+
+
+        <div class="content">
+
+        </div>
+
+        <nav>
+            <ul>
+                <a href="../index.html"> Dive back through time </a>
+            </ul>
+        </nav>
+
+        <footer>
+            <p> This web application was produced by students in the Faculty of Arts &amp; Design, University of Canberra, 2020.</p>
+        </footer>
+
+    </body>
+</div>
+
+</html>
